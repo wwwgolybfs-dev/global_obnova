@@ -12,6 +12,7 @@
   <title>Petzker Cookware — Team App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="petzker-sdk.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
@@ -894,11 +895,11 @@
     </div>
 
     <div class="bet-games-strip">
-      <div class="bet-game-tag active" onclick="filterEventsByGame('all')">Все события</div>
-      <div class="bet-game-tag" onclick="filterEventsByGame('dice')">🎲 Кубики</div>
-      <div class="bet-game-tag" onclick="filterEventsByGame('minesweeper')">💣 Минёр</div>
-      <div class="bet-game-tag" onclick="filterEventsByGame('doodle')">🧑 Дудл Джамп</div>
-      <div class="bet-game-tag" onclick="filterEventsByGame('throne')">👑 Альфа 5.3</div>
+      <div class="bet-game-tag active" onclick="filterEventsByGame('all', event)">Все события</div>
+      <div class="bet-game-tag" onclick="filterEventsByGame('dice', event)">🎲 Кубики</div>
+      <div class="bet-game-tag" onclick="filterEventsByGame('minesweeper', event)">💣 Минёр</div>
+      <div class="bet-game-tag" onclick="filterEventsByGame('doodle', event)">🧑 Дудл Джамп</div>
+      <div class="bet-game-tag" onclick="filterEventsByGame('throne', event)">👑 Альфа 5.3</div>
     </div>
 
     <div class="bet-events-list" id="events-list">
@@ -1214,7 +1215,7 @@ async function fetchBetEvents() {
 }
 
 async function insertBetEvent(eventData) {
-  // eventData = { title, description, outcome_1_name, outcome_2_name, game, created_by_user_id }
+  // eventData = { title, description, outcome_1_name, outcome_2_name, game, created_by_user_id, created_by_name }
   const payload = {
     title: eventData.title,
     description: eventData.description || null,
@@ -1222,12 +1223,11 @@ async function insertBetEvent(eventData) {
     outcome_2_name: eventData.outcome_2_name,
     game_type: eventData.game || 'general',
     created_by_user_id: eventData.created_by_user_id || null,
-    created_by_name: eventData.created_by_name || null,   // добавил
+    created_by_name: eventData.created_by_name || null,
     total_bets_outcome_1: 0,
     total_bets_outcome_2: 0,
     winning_outcome: null,
     status: 'active'
-    // id и created_at НЕ отправляем — пусть генерирует база
   };
 
   if (USE_SUPABASE) {
@@ -1306,6 +1306,42 @@ async function closeEvent(eventId) {
     saveBetEventsLocal(all);
   }
 }
+
+// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// 🔥 НОВОЕ: ОБРАБОТЧИК СООБЩЕНИЙ ОТ ИГР ЧЕРЕЗ SDK
+// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+
+// Слушаем сообщения от iframe (игры отправляют через SDK)
+window.addEventListener('message', function(e) {
+  // Проверяем, что сообщение от нашей игры
+  if (e.data && e.data.type === 'petzker-score') {
+    const { gameId, points, playerId, playerName, meta } = e.data;
+    console.log(`🎮 Получены очки от игры "${gameId}": +${points}`, meta || '');
+    
+    // Обновляем баланс пользователя
+    if (points && points > 0) {
+      userBalance += points;
+      saveUserBalanceLocal(userBalance);
+      updateBalanceDisplay();
+      
+      // Показываем уведомление
+      const gameNames = {
+        'dice': 'Кубики',
+        'minesweeper': 'Минёр',
+        'doodle': 'Дудл Джамп',
+        'throne': 'Альфа 5.3'
+      };
+      const gameName = gameNames[gameId] || gameId;
+      showToast(`🎮 +${points} очков за ${gameName}!`);
+      haptic('success');
+      
+      // Обновляем список событий (если есть привязанные к игре)
+      renderBetEvents();
+    }
+  }
+});
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -1932,12 +1968,21 @@ async function createBetEvent() {
   }
 }
 
-function filterEventsByGame(game) {
+function filterEventsByGame(game, event) {
   currentGameFilter = game;
   document.querySelectorAll('.bet-game-tag').forEach(tag => {
     tag.classList.remove('active');
   });
-  event.target.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  } else {
+    // Fallback: найти активный тег по тексту
+    document.querySelectorAll('.bet-game-tag').forEach(tag => {
+      if (tag.textContent.includes(game) || (game === 'all' && tag.textContent.includes('Все'))) {
+        tag.classList.add('active');
+      }
+    });
+  }
   renderBetEvents();
   haptic('light');
 }
@@ -2155,6 +2200,10 @@ async function init() {
   }
   currentUser = getTelegramUser();
 
+  // Загружаем баланс из localStorage
+  userBalance = loadUserBalanceLocal();
+  updateBalanceDisplay();
+
   if (!USE_SUPABASE) {
     document.getElementById('config-banner').style.display = 'flex';
   }
@@ -2166,8 +2215,6 @@ async function init() {
   diaryPage = Math.ceil(diaryEntries.length / DIARY_PAGE_SIZE) || 1;
 
   try { betEvents = await fetchBetEvents(); } catch (e) { console.error(e); betEvents = []; }
-  userBalance = loadUserBalanceLocal();
-  updateBalanceDisplay();
 
   setupRealtime();
 }
