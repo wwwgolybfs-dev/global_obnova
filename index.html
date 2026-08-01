@@ -320,6 +320,12 @@
     .bet-create-btn:hover { background: rgba(255,255,255,0.35); }
     .bet-create-btn:active { transform: scale(.95); }
 
+    /* Переключатель внутри Petzker Bet */
+    .bet-sub-tabs { display: flex; gap: 8px; margin: 12px 12px 0; }
+    .bet-sub-tab { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg); color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .bet-sub-tab.active { background: var(--blue); color: white; border-color: var(--blue); }
+    .bet-sub-tab:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
     .bet-events-list { flex: 1; overflow-y: auto; padding: 12px 12px; }
     .event-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; animation: entryIn .3s ease both; }
     .event-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
@@ -350,22 +356,8 @@
     .event-btn.outcome-result { background: var(--blue); color: white; border-color: var(--blue); }
     .event-btn.outcome-result:hover { opacity: 0.9; }
 
-    /* Мои ставки (вкладка профиля) */
-    .profile-section { padding: 12px; }
-    .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 32px; overflow: hidden; flex-shrink: 0; }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-info { flex: 1; }
-    .profile-name { font-size: 18px; font-weight: 700; }
-    .profile-id { font-size: 13px; color: var(--text-muted); }
-    .profile-balance { font-size: 16px; font-weight: 700; color: var(--purple); margin-top: 4px; }
-    .profile-balance span { background: var(--purple-light); padding: 2px 10px; border-radius: 12px; }
-
-    .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .filter-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg); color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-    .filter-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
-    .filter-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
-
+    /* История ставок (внутри Petzker Bet) */
+    .history-list { padding: 12px; }
     .bet-history-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; gap: 6px; }
     .bet-history-item .event-name { font-weight: 500; flex: 1; min-width: 120px; }
     .bet-history-item .bet-amount { font-weight: 600; }
@@ -374,6 +366,11 @@
     .bet-history-item .bet-result.loss { color: var(--red); }
     .bet-history-item .bet-result.pending { color: var(--orange); }
     .bet-history-item .bet-profit { font-size: 12px; color: var(--text-muted); }
+
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg); color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .filter-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+    .filter-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
 
     /* Модалка выбора исхода */
     .outcome-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
@@ -429,7 +426,6 @@
     <button class="tab" data-tab="diary" onclick="switchTab('diary')">📓 Дневник</button>
     <button class="tab" data-tab="bet" onclick="switchTab('bet')">💰 Petzker Bet</button>
     <button class="tab" data-tab="games" onclick="switchTab('games')">🎮 Игры</button>
-    <button class="tab" data-tab="profile" onclick="switchTab('profile')">👤 Профиль</button>
   </div>
 </div>
 
@@ -495,9 +491,27 @@
       <button class="bet-create-btn" onclick="openBetCreateModal()">+ Событие</button>
     </div>
 
-    <!-- Список активных событий -->
+    <!-- Переключатель: События / Мои ставки -->
+    <div class="bet-sub-tabs">
+      <button class="bet-sub-tab active" data-subtab="events" onclick="switchBetSubTab('events')">📋 События</button>
+      <button class="bet-sub-tab" data-subtab="history" onclick="switchBetSubTab('history')">📜 Мои ставки</button>
+    </div>
+
+    <!-- Контейнер для событий (активные) -->
     <div class="bet-events-list" id="events-list">
       <div class="empty-state">Нет активных событий. Создайте первое! 🎯</div>
+    </div>
+
+    <!-- Контейнер для истории ставок (изначально скрыт) -->
+    <div class="history-list" id="history-list" style="display:none;">
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all" onclick="filterHistory('all')">Все</button>
+        <button class="filter-btn" data-filter="active" onclick="filterHistory('active')">Активные</button>
+        <button class="filter-btn" data-filter="closed" onclick="filterHistory('closed')">Закрытые</button>
+      </div>
+      <div id="history-items">
+        <div class="empty-state">У вас пока нет ставок</div>
+      </div>
     </div>
   </div>
 </div>
@@ -532,32 +546,6 @@
   <button class="game-back-btn" id="game-back-btn" style="display:none;" onclick="backToGamesMenu()">←</button>
 </div>
 
-<!-- PROFILE VIEW -->
-<div id="view-profile" class="view">
-  <div class="profile-section">
-    <div class="profile-header">
-      <div class="profile-avatar" id="profile-avatar">
-        <span id="avatar-placeholder">👤</span>
-      </div>
-      <div class="profile-info">
-        <div class="profile-name" id="profile-name">Загрузка...</div>
-        <div class="profile-id" id="profile-id">ID: —</div>
-        <div class="profile-balance">💎 Баланс: <span id="profile-balance">0</span></div>
-      </div>
-    </div>
-
-    <div class="filter-tabs">
-      <button class="filter-btn active" data-filter="all" onclick="filterHistory('all')">Все</button>
-      <button class="filter-btn" data-filter="active" onclick="filterHistory('active')">Активные</button>
-      <button class="filter-btn" data-filter="closed" onclick="filterHistory('closed')">Закрытые</button>
-    </div>
-
-    <div id="history-list">
-      <div class="empty-state">У вас пока нет ставок</div>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL FOR CALENDAR -->
 <div class="overlay" id="modal-overlay" onclick="closeModalOutside(event)">
   <div class="modal" id="modal">
@@ -583,7 +571,7 @@
   </div>
 </div>
 
-<!-- MODAL FOR BET CREATE (без поля "Игра") -->
+<!-- MODAL FOR BET CREATE -->
 <div class="overlay" id="bet-modal-overlay" onclick="closeBetModalOutside(event)">
   <div class="modal bet-modal" id="bet-modal">
     <div class="modal-handle"></div>
@@ -703,12 +691,12 @@ if (USE_SUPABASE) {
 }
 
 // ═══════════════════════════════════════════════
-// ADMIN USERS
+// ADMIN USERS (для комиссии)
 // ═══════════════════════════════════════════════
-const ADMIN_ID = 438081341; // Анатолий - 6%
-const COMMISSION_USER_ID = 665412797; // vnvv - 4% 
-const ADMIN_COMMISSION = 0.06; // 6%
-const COMMISSION_USER_COMMISSION = 0.04; // 4%
+const ANATOLY_ID = '438081341';
+const VNVV_ID = '665412797';
+const ANATOLY_COMMISSION = 0.06; // 6%
+const VNVV_COMMISSION = 0.04;   // 4%
 
 // ═══════════════════════════════════════════════
 // LOCAL STORAGE FALLBACK
@@ -917,18 +905,18 @@ async function insertBetEvent(eventData) {
 // ФУНКЦИИ ДЛЯ РАБОТЫ С БАЛАНСОМ (Supabase + localStorage)
 // ═══════════════════════════════════════════════
 
-async function updateBalanceInSupabase(newBalance) {
-  if (!USE_SUPABASE || !currentUser) return;
+async function updateBalanceInSupabase(userId, newBalance, userName) {
+  if (!USE_SUPABASE || !userId) return;
   try {
     await supabaseClient
       .from('player_ratings')
       .upsert({
-        telegram_user_id: currentUser.id,
-        name: currentUser.name,
+        telegram_user_id: userId,
+        name: userName || 'Пользователь',
         total_score: newBalance,
         updated_at: new Date().toISOString()
       }, { onConflict: 'telegram_user_id' });
-    console.log('✅ Баланс сохранён в Supabase:', newBalance);
+    console.log(`✅ Баланс для ${userId} сохранён: ${newBalance}`);
   } catch (e) {
     console.error('Ошибка сохранения баланса в Supabase:', e);
   }
@@ -955,12 +943,14 @@ async function loadBalanceFromSupabase() {
   }
 }
 
-// Функция для изменения баланса с сохранением в Supabase
-async function setBalance(newBalance) {
-  userBalance = newBalance;
-  saveUserBalanceLocal(userBalance);
-  updateBalanceDisplay();
-  await updateBalanceInSupabase(userBalance);
+// Универсальная функция изменения баланса с сохранением
+async function setBalance(userId, newBalance, userName) {
+  if (userId === currentUser?.id) {
+    userBalance = newBalance;
+    saveUserBalanceLocal(userBalance);
+    updateBalanceDisplay();
+  }
+  await updateBalanceInSupabase(userId, newBalance, userName);
 }
 
 // ═══════════════════════════════════════════════
@@ -969,6 +959,7 @@ async function setBalance(newBalance) {
 
 let betPlaceState = { eventId: null, outcome: null, amount: 0, selectedPreset: null };
 let outcomeSelectEventId = null;
+let currentHistoryFilter = 'all';
 
 function placeBetOnOutcome(eventId, outcome) {
   if (!currentUser) {
@@ -1026,22 +1017,17 @@ function updatePotentialWin(amount) {
   if (!event) return;
   const totalBets = event.total_bets_outcome_1 + event.total_bets_outcome_2;
   const outcomeBets = betPlaceState.outcome === 1 ? event.total_bets_outcome_1 : event.total_bets_outcome_2;
+  // Коэффициент обратно пропорционален доле ставок на исход (но не менее 1.2)
   let multiplier = 1.5;
   if (totalBets > 0 && outcomeBets > 0) {
     const share = outcomeBets / totalBets;
     multiplier = Math.max(1.2, 2.5 / share);
   }
-  const commission = getCommissionForCreator(event.created_by_user_id);
-  const effectiveMultiplier = multiplier * (1 - commission);
+  // Комиссия (для отображения потенциального выигрыша используем максимальную комиссию 6%, чтобы не обманывать игрока)
+  const effectiveMultiplier = multiplier * (1 - 0.06); // показываем с учётом 6% (максимальная комиссия)
   const potentialWin = Math.round(amount * effectiveMultiplier);
   document.getElementById('bet-win-amount').textContent = potentialWin;
   document.getElementById('bet-potential-win').style.display = 'block';
-}
-
-function getCommissionForCreator(creatorId) {
-  if (String(creatorId) === String(ADMIN_ID)) return ADMIN_COMMISSION;
-  if (String(creatorId) === String(COMMISSION_USER_ID)) return COMMISSION_USER_COMMISSION;
-  return 0; // без комиссии, если создатель не из списка
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1091,8 +1077,8 @@ async function confirmBetPlace() {
   confirmBtn.disabled = true;
   confirmBtn.textContent = 'Ставим...';
   try {
-    // Списываем очки
-    await setBalance(userBalance - amount);
+    // Списываем очки у текущего пользователя
+    await setBalance(currentUser.id, userBalance - amount, currentUser.name);
     const bet = await placeBet(betPlaceState.eventId, currentUser.id, amount, betPlaceState.outcome);
     const event = betEvents.find(e => e.id === betPlaceState.eventId);
     if (event) {
@@ -1115,7 +1101,7 @@ async function confirmBetPlace() {
     }
     closeBetPlaceModal();
     renderBetEvents();
-    renderProfile();
+    renderHistory(currentHistoryFilter);
     showToast(`✅ Ставка ${amount} очков принята!`);
     haptic('success');
   } catch (e) {
@@ -1124,7 +1110,7 @@ async function confirmBetPlace() {
     errorEl.classList.add('show');
     haptic('error');
     // Возвращаем очки
-    await setBalance(userBalance + amount);
+    await setBalance(currentUser.id, userBalance + amount, currentUser.name);
   } finally {
     confirmBtn.disabled = false;
     confirmBtn.textContent = originalLabel;
@@ -1208,7 +1194,7 @@ async function confirmOutcomeFromModal(outcome) {
     if (event) event.winning_outcome = outcome;
     closeOutcomeSelectModal();
     renderBetEvents();
-    renderProfile();
+    renderHistory(currentHistoryFilter);
     showToast(`✅ Исход установлен: ${outcome === 1 ? 'Исход 1' : 'Исход 2'}`);
     haptic('success');
   } catch (e) {
@@ -1218,7 +1204,7 @@ async function confirmOutcomeFromModal(outcome) {
   }
 }
 
-// Функция закрытия события с корректным расчётом выигрышей
+// Функция закрытия события с корректным расчётом выигрышей и комиссии
 async function closeEventConfirm(eventId) {
   const ok = await askConfirm('Закрыть это событие? Выигрыши будут начислены победителям.');
   if (!ok) return;
@@ -1253,21 +1239,28 @@ async function closeEventConfirm(eventId) {
       return;
     }
 
-    // Вычисляем комиссию для этого события
-    const commission = getCommissionForCreator(event.created_by_user_id);
-    const poolAfterCommission = totalBets * (1 - commission);
+    // Вычисляем комиссии для Анатолия и vnvv (от общего пула)
+    const commissionAnatoly = Math.round(totalBets * ANATOLY_COMMISSION);
+    const commissionVnvv = Math.round(totalBets * VNVV_COMMISSION);
+    const totalCommission = commissionAnatoly + commissionVnvv;
+    const poolAfterCommission = totalBets - totalCommission;
 
-    // Начисляем выигрыши
-    let totalWinnings = 0;
+    // Начисляем комиссии на балансы (если пользователи существуют, создаём при необходимости)
+    await addCommissionToUser(ANATOLY_ID, 'Анатолий', commissionAnatoly);
+    await addCommissionToUser(VNVV_ID, 'vnvv', commissionVnvv);
+
+    // Начисляем выигрыши победителям
     for (const bet of bets) {
       if (bet.chosen_outcome === winningOutcome) {
         const share = bet.bet_amount / winnerPool;
         const winnings = Math.round(poolAfterCommission * share);
-        totalWinnings += winnings;
-        // Если ставка принадлежит текущему пользователю, начисляем очки
+        // Начисляем выигрыш пользователю
         if (String(bet.user_id) === String(currentUser.id)) {
-          await setBalance(userBalance + winnings);
+          await setBalance(currentUser.id, userBalance + winnings, currentUser.name);
           showToast(`🎉 Вы выиграли ${winnings} очков!`);
+        } else {
+          // Если победитель не текущий пользователь, обновляем его баланс в Supabase (если доступен)
+          await updateBalanceInSupabase(bet.user_id, (await getBalanceForUser(bet.user_id)) + winnings, bet.user_name);
         }
         // Обновляем запись ставки
         if (USE_SUPABASE && supabaseClient) {
@@ -1313,14 +1306,67 @@ async function closeEventConfirm(eventId) {
     event.closed_at = new Date().toISOString();
 
     renderBetEvents();
-    renderProfile();
-    showToast(`✅ Событие закрыто, выигрыши начислены! (Комиссия: ${commission*100}%)`);
+    renderHistory(currentHistoryFilter);
+    showToast(`✅ Событие закрыто. Комиссия: ${totalCommission} очков (Анатолий: ${commissionAnatoly}, vnvv: ${commissionVnvv})`);
     haptic('success');
   } catch (e) {
     console.error(e);
     showToast('Ошибка закрытия события');
     haptic('error');
   }
+}
+
+// Вспомогательная функция для начисления комиссии пользователю
+async function addCommissionToUser(userId, userName, amount) {
+  if (amount <= 0) return;
+  if (USE_SUPABASE && supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('player_ratings')
+        .select('total_score')
+        .eq('telegram_user_id', userId)
+        .maybeSingle();
+      if (data) {
+        await supabaseClient
+          .from('player_ratings')
+          .update({ total_score: data.total_score + amount })
+          .eq('telegram_user_id', userId);
+      } else {
+        await supabaseClient
+          .from('player_ratings')
+          .insert({ telegram_user_id: userId, name: userName, total_score: amount });
+      }
+      // Если это текущий пользователь, обновляем локальный баланс
+      if (String(userId) === String(currentUser?.id)) {
+        userBalance += amount;
+        saveUserBalanceLocal(userBalance);
+        updateBalanceDisplay();
+      }
+    } catch (e) {
+      console.error('Ошибка начисления комиссии:', e);
+    }
+  } else {
+    // localStorage fallback: обновляем баланс в localStorage для этого пользователя (если он текущий)
+    if (String(userId) === String(currentUser?.id)) {
+      userBalance += amount;
+      saveUserBalanceLocal(userBalance);
+      updateBalanceDisplay();
+    }
+    // Для других пользователей мы не храним их балансы в localStorage, поэтому просто игнорируем
+  }
+}
+
+// Вспомогательная функция для получения баланса пользователя (только для Supabase)
+async function getBalanceForUser(userId) {
+  if (!USE_SUPABASE) return 0;
+  try {
+    const { data } = await supabaseClient
+      .from('player_ratings')
+      .select('total_score')
+      .eq('telegram_user_id', userId)
+      .maybeSingle();
+    return data ? data.total_score : 0;
+  } catch (e) { return 0; }
 }
 
 // ═══════════════════════════════════════════════
@@ -1369,10 +1415,8 @@ function renderBetEvents() {
         </div>
       </div>
     `;
-    const commission = getCommissionForCreator(event.created_by_user_id);
-    if (commission > 0) {
-      html += `<div class="event-commission">Комиссия: ${(commission * 100).toFixed(0)}%</div>`;
-    }
+    // Показываем информацию о комиссии (для всех)
+    html += `<div class="event-commission">Комиссия: 6% (Анатолий) + 4% (vnvv) от общего пула</div>`;
     if (isCreator) {
       html += `
         <div class="event-actions">
@@ -1388,43 +1432,8 @@ function renderBetEvents() {
   });
 }
 
-function renderProfile() {
-  // Заполняем данные профиля
-  if (currentUser) {
-    document.getElementById('profile-name').textContent = currentUser.name;
-    document.getElementById('profile-id').textContent = `ID: ${currentUser.id}`;
-    document.getElementById('profile-balance').textContent = userBalance;
-    // Аватар из Telegram
-    const avatarEl = document.getElementById('profile-avatar');
-    const placeholder = document.getElementById('avatar-placeholder');
-    // Пытаемся загрузить фото профиля через стандартный URL
-    const photoUrl = `https://t.me/i/userpic/320/${currentUser.id}.jpg`;
-    const img = document.createElement('img');
-    img.src = photoUrl;
-    img.onload = function() {
-      avatarEl.innerHTML = '';
-      avatarEl.appendChild(img);
-    };
-    img.onerror = function() {
-      placeholder.textContent = currentUser.name.charAt(0).toUpperCase();
-    };
-    // Если не загрузится, оставляем иконку
-  }
-  // Рендерим историю ставок (с фильтром)
-  renderHistory('all');
-}
-
-let currentHistoryFilter = 'all';
-
-function filterHistory(filter) {
-  currentHistoryFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
-  renderHistory(filter);
-}
-
 function renderHistory(filter) {
-  const container = document.getElementById('history-list');
+  const container = document.getElementById('history-items');
   if (!currentUser) {
     container.innerHTML = '<div class="empty-state">Войдите в аккаунт, чтобы видеть свои ставки</div>';
     return;
@@ -1434,13 +1443,17 @@ function renderHistory(filter) {
     container.innerHTML = '<div class="empty-state">У вас пока нет ставок</div>';
     return;
   }
-  // Сортируем по дате (сначала новые)
   bets.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
   if (filter === 'active') {
     bets = bets.filter(b => b.result === null);
   } else if (filter === 'closed') {
     bets = bets.filter(b => b.result !== null);
+  }
+
+  if (!bets.length) {
+    container.innerHTML = `<div class="empty-state">Нет ставок по фильтру "${filter}"</div>`;
+    return;
   }
 
   let html = '';
@@ -1488,8 +1501,8 @@ window.addEventListener('message', function(e) {
     const { gameId, points, playerId, playerName, meta } = e.data;
     console.log(`🎮 Получены очки от игры "${gameId}": +${points}`, meta || '');
     if (points && points > 0 && currentUser) {
-      // Начисляем очки и сохраняем в Supabase
-      setBalance(userBalance + points).then(() => {
+      // Начисляем очки текущему пользователю
+      setBalance(currentUser.id, userBalance + points, currentUser.name).then(() => {
         const gameNames = {
           'dice': 'Кубики',
           'minesweeper': 'Минёр',
@@ -1500,7 +1513,7 @@ window.addEventListener('message', function(e) {
         showToast(`🎮 +${points} очков за ${gameName}!`);
         haptic('success');
         renderBetEvents();
-        renderProfile();
+        renderHistory(currentHistoryFilter);
       });
     }
   }
@@ -1523,6 +1536,7 @@ let highlightKey = null;
 const DIARY_PAGE_SIZE = 6;
 let betEvents = [];
 let userBalance = 1000;
+let currentBetSubTab = 'events'; // 'events' или 'history'
 
 const SUN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>';
 const MOON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -1607,12 +1621,28 @@ function switchTab(tab) {
   document.getElementById('view-diary').classList.toggle('active', tab === 'diary');
   document.getElementById('view-bet').classList.toggle('active', tab === 'bet');
   document.getElementById('view-games').classList.toggle('active', tab === 'games');
-  document.getElementById('view-profile').classList.toggle('active', tab === 'profile');
   if (tab === 'diary') renderDiary();
-  if (tab === 'bet') renderBetEvents();
-  if (tab === 'profile') renderProfile();
+  if (tab === 'bet') {
+    // Показываем активную подвкладку
+    switchBetSubTab(currentBetSubTab);
+  }
   if (tab === 'games') backToGamesMenu();
   haptic('light');
+}
+
+// Переключение между "События" и "Мои ставки" внутри Petzker Bet
+function switchBetSubTab(subtab) {
+  currentBetSubTab = subtab;
+  document.querySelectorAll('.bet-sub-tab').forEach(b => b.classList.toggle('active', b.dataset.subtab === subtab));
+  if (subtab === 'events') {
+    document.getElementById('events-list').style.display = 'block';
+    document.getElementById('history-list').style.display = 'none';
+    renderBetEvents();
+  } else {
+    document.getElementById('events-list').style.display = 'none';
+    document.getElementById('history-list').style.display = 'block';
+    renderHistory(currentHistoryFilter);
+  }
 }
 
 function selectGame(game) {
@@ -1989,7 +2019,6 @@ async function addDiaryEntry() {
 
 function updateBalanceDisplay() {
   document.getElementById('user-balance').textContent = userBalance;
-  document.getElementById('profile-balance').textContent = userBalance;
 }
 
 function openBetCreateModal() {
@@ -2049,7 +2078,7 @@ async function createBetEvent() {
     betEvents.unshift(event);
     closeBetModal();
     renderBetEvents();
-    renderProfile();
+    renderHistory(currentHistoryFilter);
     showToast(`✅ Событие "${title}" создано!`);
     haptic('success');
   } catch (e) {
@@ -2061,6 +2090,13 @@ async function createBetEvent() {
     createBtn.disabled = false;
     createBtn.textContent = originalLabel;
   }
+}
+
+function filterHistory(filter) {
+  currentHistoryFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
+  renderHistory(filter);
 }
 
 function setupRealtime() {
@@ -2086,8 +2122,10 @@ function setupRealtime() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bet_events' }, () => {
         fetchBetEvents().then(e => {
           betEvents = e;
-          if (document.getElementById('view-bet').classList.contains('active')) renderBetEvents();
-          if (document.getElementById('view-profile').classList.contains('active')) renderProfile();
+          if (document.getElementById('view-bet').classList.contains('active')) {
+            if (currentBetSubTab === 'events') renderBetEvents();
+            else renderHistory(currentHistoryFilter);
+          }
         });
       })
       .subscribe();
@@ -2112,14 +2150,15 @@ async function init() {
   try { diaryEntries = await fetchDiary(); } catch (e) { console.error(e); diaryEntries = []; }
   diaryPage = Math.ceil(diaryEntries.length / DIARY_PAGE_SIZE) || 1;
   try { betEvents = await fetchBetEvents(); } catch (e) { console.error(e); betEvents = []; }
-  renderBetEvents();
-  renderProfile();
+  // Показываем вкладку "События" по умолчанию
+  switchBetSubTab('events');
   setupRealtime();
 }
 
 // Экспортируем функции для HTML
 window.toggleTheme = toggleTheme;
 window.switchTab = switchTab;
+window.switchBetSubTab = switchBetSubTab;
 window.changeMonth = changeMonth;
 window.openModal = openModal;
 window.closeModal = closeModal;
