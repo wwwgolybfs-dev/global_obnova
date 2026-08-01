@@ -1013,7 +1013,7 @@ function renderBetEvents() {
   activeEvents.forEach((event, i) => {
     const percent1 = calculateOutcomePercent(event, 1);
     const percent2 = 100 - percent1;
-    const isCreator = currentUser && String(currentUser.id) === String(event.created_by_user_id);
+    const isCreator = isAdmin && String(currentUser.id) === String(ANATOLY_ID));
     let html = `
       <div class="event-card" style="animation-delay: ${Math.min(i * 40, 220)}ms">
         <div class="event-header">
@@ -1051,7 +1051,7 @@ function renderBetEvents() {
     if (isCommissionAdmin) {
       html += `<div class="event-commission">Комиссия конторы: 6% (Анатолий) + 4% (vnvv) от общего пула</div>`;
     }
-    if (isCreator) {
+    if (isAdmin) {
       html += `
         <div class="event-actions">
           <button class="event-btn outcome-result" onclick="openOutcomeSelector('${event.id}')">Выбрать исход</button>
