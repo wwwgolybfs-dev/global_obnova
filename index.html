@@ -1785,23 +1785,24 @@ async function createBetEvent() {
     haptic('success');
 
     // ===== ОТПРАВКА УВЕДОМЛЕНИЯ В TELEGRAM =====
-    try {
-      await fetch("https://heubrattlnikielnfheg.supabase.co/functions/v1/notify-event", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          title: title,
-          creator_name: currentUser.name,
-          description: desc || "",
-        }),
-      });
-    } catch (e) {
-      console.error("Ошибка отправки уведомления:", e);
-    }
-    // ==========================================
+try {
+  await fetch("https://heubrattlnikielnfheg.supabase.co/functions/v1/notify-event", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "apikey": SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({
+      title: title,
+      creator_name: currentUser.name,
+      description: desc || "",
+    }),
+  });
+} catch (e) {
+  console.error("Ошибка отправки уведомления:", e);
+}
+// ==========================================
 
   } catch (e) {
     console.error(e);
