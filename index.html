@@ -258,10 +258,41 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
       <div class="section-kicker" style="margin:4px 0 7px">Игровая зона</div>
       <div class="page-heading" style="margin-bottom:14px">Зарабатывай очки</div>
       <div class="games-menu" id="games-menu">
-        <div class="game-card" onclick="selectGame('dice')"><div class="game-card-icon">🎲</div><div class="game-card-title">Кубики</div><div class="game-card-desc">Блоки на доске</div></div>
-        <div class="game-card" onclick="selectGame('minesweeper')"><div class="game-card-icon">💣</div><div class="game-card-title">Минёр</div><div class="game-card-desc">Классический</div></div>
-        <div class="game-card" onclick="selectGame('doodle')"><div class="game-card-icon">🧑</div><div class="game-card-title">Дудл Джамп</div><div class="game-card-desc">Прыгай выше</div></div>
-        <div class="game-card" onclick="selectGame('throne')"><div class="game-card-icon">👑</div><div class="game-card-title">Альфа версия 5.3</div><div class="game-card-desc">beta</div></div>
+  <div class="game-card" onclick="selectGame('dice')">
+    <div class="game-card-icon">🎲</div>
+    <div class="game-card-title">Кубики</div>
+    <div class="game-card-desc">Блоки на доске</div>
+  </div>
+
+  <div class="game-card" onclick="selectGame('minesweeper')">
+    <div class="game-card-icon">💣</div>
+    <div class="game-card-title">Минёр</div>
+    <div class="game-card-desc">Классический</div>
+  </div>
+
+  <div class="game-card" onclick="selectGame('doodle')">
+    <div class="game-card-icon">🧑</div>
+    <div class="game-card-title">Дудл Джамп</div>
+    <div class="game-card-desc">Прыгай выше</div>
+  </div>
+
+  <div class="game-card" onclick="selectGame('throne')">
+    <div class="game-card-icon">👑</div>
+    <div class="game-card-title">Messenger</div>
+    <div class="game-card-desc">3D мир</div>
+  </div>
+
+  <div class="game-card" onclick="selectGame('cssdoom')">
+    <div class="game-card-icon">🔫</div>
+    <div class="game-card-title">CSS Doom</div>
+    <div class="game-card-desc">Браузерный Doom</div>
+  </div>
+
+  <div class="game-card game-card-empty" onclick="selectGame('slot6')">
+    <div class="game-card-icon">➕</div>
+    <div class="game-card-title">Скоро</div>
+    <div class="game-card-desc">Слот 6</div>
+  </div>
       </div>
       <div class="game-frame-container" id="game-container"><iframe id="game-frame" title="Игра"></iframe></div>
       <button class="game-back-btn" id="game-back-btn" style="display:none" onclick="backToGamesMenu()">←</button>
@@ -1345,23 +1376,55 @@ function updateProfileStats() {
 
 function selectGame(game) {
   const gameUrls = {
-    'dice': GAMES_BASE_URL + 'dice.html',
+    'dice':        GAMES_BASE_URL + 'dice.html',
     'minesweeper': GAMES_BASE_URL + 'minesweeper.html',
-    'doodle': GAMES_BASE_URL + 'doodle.html',
-    'throne': 'https://messenger.abeto.co/'
+    'doodle':      GAMES_BASE_URL + 'doodle.html',
+    'throne':      'https://messenger.abeto.co/',
+    'cssdoom':     'https://cssdoom.wtf/',
+    'slot6':       null          // ← пока пусто, потом просто впиши URL
   };
+
+  // Если слот ещё не заполнен
+  if (!gameUrls[game]) {
+    showToast('Эта игра ещё не добавлена');
+    haptic('warning');
+    return;
+  }
+
   currentGame = game;
   document.getElementById('games-menu').style.display = 'none';
   document.getElementById('game-container').classList.add('active');
   document.getElementById('game-back-btn').style.display = 'flex';
+
   const params = new URLSearchParams();
   if (currentUser) {
     params.set('uid', String(currentUser.id));
     params.set('name', currentUser.name);
   }
   params.set('theme', document.documentElement.getAttribute('data-theme') || 'light');
+
   const iframe = document.getElementById('game-frame');
-  iframe.src = gameUrls[game] + (gameUrls[game].includes('?') ? '&' : '?') + params.toString();
+  const url = gameUrls[game];
+  // Внешние сайты (messenger, cssdoom) открываем без параметров
+  if (url.startsWith('http') && !url.includes(GAMES_BASE_URL)) {
+    iframe.src = url;
+  } else {
+    iframe.src = url + (url.includes('?') ? '&' : '?') + params.toString();
+  }
+
+  // Для тяжёлых игр просим fullscreen
+  if (game === 'throne' || game === 'cssdoom') {
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.expand();
+        if (typeof tg.requestFullscreen === 'function') {
+          tg.requestFullscreen();
+        }
+      }
+    } catch (e) {}
+  }
+
   haptic('light');
 }
 
