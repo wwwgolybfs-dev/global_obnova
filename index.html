@@ -289,9 +289,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   </div>
 
   <div class="game-card game-card-empty" onclick="selectGame('slot6')">
-    <div class="game-card-icon">➕</div>
-    <div class="game-card-title">Скоро</div>
-    <div class="game-card-desc">Слот 6</div>
+    <div class="game-card-icon">🎰</div>
+    <div class="game-card-title">Petzker de cristal</div>
+    <div class="game-card-desc">Бурмалда</div>
   </div>
       </div>
       <div class="game-frame-container" id="game-container"><iframe id="game-frame" title="Игра"></iframe></div>
@@ -1176,7 +1176,7 @@ window.addEventListener('message', function(e) {
           'dice': 'Кубики',
           'minesweeper': 'Минёр',
           'doodle': 'Дудл Джамп',
-          'throne': 'Альфа 5.3'
+          'casino': 'Альфа 5.3'
         };
         const gameName = gameNames[gameId] || gameId;
         showToast(`🎮 +${points} очков за ${gameName}!`);
@@ -1381,7 +1381,7 @@ function selectGame(game) {
     'doodle':      GAMES_BASE_URL + 'doodle.html',
     'throne':      'https://messenger.abeto.co/',
     'cssdoom':     'https://cssdoom.wtf/',
-    'slot6':       null          // ← пока пусто, потом просто впиши URL
+    'casino':      'https://wwwgolybfs-dev.github.io/Casino/casino.html'          // ← пока пусто, потом просто впиши URL
   };
 
   // Если слот ещё не заполнен
@@ -1413,7 +1413,7 @@ function selectGame(game) {
   }
 
   // Для тяжёлых игр просим fullscreen
-  if (game === 'throne' || game === 'cssdoom') {
+  if (game === 'casino' || game === 'cssdoom') {
     try {
       const tg = window.Telegram?.WebApp;
       if (tg) {
